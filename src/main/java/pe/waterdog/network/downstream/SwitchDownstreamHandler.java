@@ -100,6 +100,10 @@ public class SwitchDownstreamHandler implements BedrockPacketHandler {
     public boolean handle(PlayStatusPacket packet) {
         switch (packet.getStatus()) {
             case LOGIN_SUCCESS:
+                // We can start with transfer
+                RewriteData rewriteData = this.player.getRewriteData();
+                PlayerRewriteUtils.injectEmptyChunks(this.player.getUpstream(), Vector3f.ZERO, 4);
+                PlayerRewriteUtils.injectPosition(this.player.getUpstream(), Vector3f.from(0, 300, 0), Vector3f.ZERO, rewriteData.getEntityId());
                 throw CancelSignalException.CANCEL;
             case LOGIN_FAILED_CLIENT_OLD:
             case LOGIN_FAILED_SERVER_OLD:
@@ -129,12 +133,8 @@ public class SwitchDownstreamHandler implements BedrockPacketHandler {
         initializedPacket.setRuntimeEntityId(rewriteData.getOriginalEntityId());
         this.getDownstream().sendPacket(initializedPacket);
 
-        MovePlayerPacket movePlayerPacket = new MovePlayerPacket();
-        movePlayerPacket.setPosition(packet.getPlayerPosition());
-        movePlayerPacket.setRuntimeEntityId(rewriteData.getEntityId());
-        movePlayerPacket.setRotation(Vector3f.from(packet.getRotation().getX(), packet.getRotation().getY(), packet.getRotation().getY()));
-        movePlayerPacket.setMode(MovePlayerPacket.Mode.RESPAWN);
-        this.player.sendPacket(movePlayerPacket);
+        Vector3f rotation = Vector3f.from(packet.getRotation().getX(), 0, packet.getRotation().getY());
+        PlayerRewriteUtils.injectPosition(this.player.getUpstream(), packet.getPlayerPosition(), rotation, rewriteData.getEntityId());
 
         this.getDownstream().sendPacket(rewriteData.getChunkRadius());
         PlayerRewriteUtils.injectRemoveAllEffects(this.player.getUpstream(), rewriteData.getEntityId());

@@ -128,4 +128,32 @@ public class PlayerRewriteUtils {
         packet.setBossUniqueEntityId(bossbarId);
         session.sendPacket(packet);
     }
+
+    public static void injectPosition(BedrockSession session, Vector3f position, Vector3f rotation, long runtimeId){
+        MovePlayerPacket packet = new MovePlayerPacket();
+        packet.setPosition(position);
+        packet.setRuntimeEntityId(runtimeId);
+        packet.setRotation(rotation);
+        packet.setMode(MovePlayerPacket.Mode.RESPAWN);
+        session.sendPacket(packet);
+    }
+
+    public static void injectEmptyChunks(BedrockSession session, Vector3f spawnPosition, int radius){
+        int chunkPositionX = spawnPosition.getFloorX() >> 4;
+        int chunkPositionZ = spawnPosition.getFloorZ() >> 4;
+
+        for (int x = -radius; x < radius; x++) {
+            for (int z = -radius; z < radius; z++) {
+                injectEmptyChunk(session, chunkPositionX + x, chunkPositionZ + z);
+            }
+        }
+    }
+
+    public static void injectEmptyChunk(BedrockSession session, int chunkX, int chunkZ){
+        LevelChunkPacket packet = new LevelChunkPacket();
+        packet.setChunkX(chunkX);
+        packet.setChunkZ(chunkZ);
+        packet.setData(new byte[0]);
+        session.sendPacket(packet);
+    }
 }
