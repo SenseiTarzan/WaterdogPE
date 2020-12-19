@@ -185,8 +185,8 @@ public class ProxiedPlayer implements CommandSender {
             return;
         }
 
-        CompletableFuture<BedrockClient> future = this.proxy.bindClient(this.getProtocol());
-        future.thenAccept(client -> client.connect(targetServer.getAddress()).whenComplete((downstream, throwable) -> {
+        CompletableFuture<BedrockClient> future = this.proxy.bindClient(this.getProtocol(), targetServer.getAddress());
+        future.thenAccept(client -> client.directConnect(targetServer.getAddress()).whenComplete((downstream, throwable) -> {
             if (throwable != null) {
                 this.getLogger().debug("[" + this.upstream.getAddress() + "|" + this.getName() + "] Unable to connect to downstream " + targetServer.getServerName(), throwable);
                 this.pendingConnection = null;

@@ -234,19 +234,10 @@ public class ProxyServer {
         return this.commandMap.handleCommand(sender, args[0], Arrays.copyOfRange(args, 1, args.length));
     }
 
-    public CompletableFuture<BedrockClient> bindClient(ProtocolVersion protocol) {
-        int port;
-        try {
-            ServerSocket socket = new ServerSocket(0);
-            socket.setReuseAddress(true);
-            port = socket.getLocalPort();
-        }catch (IOException e){
-            throw new RuntimeException("Can bind BedrockClient!", e);
-        }
-        InetSocketAddress address = new InetSocketAddress("0.0.0.0", port);
-        BedrockClient client = new BedrockClient(address);
+    public CompletableFuture<BedrockClient> bindClient(ProtocolVersion protocol, InetSocketAddress remoteAddress) {
+        BedrockClient client = new BedrockClient();
         client.setRakNetVersion(protocol.getRaknetVersion());
-        return client.bind().thenApply(i -> client);
+        return client.bind(remoteAddress).thenApply(i -> client);
     }
 
     public boolean isRunning() {
