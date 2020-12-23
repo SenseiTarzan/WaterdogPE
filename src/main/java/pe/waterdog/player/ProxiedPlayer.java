@@ -220,7 +220,7 @@ public class ProxiedPlayer implements CommandSender {
             downstream.setLogging(true);
 
             SessionInjections.injectNewDownstream(downstream, this, targetServer, client);
-            this.getLogger().info("[" + this.upstream.getAddress() + "|" + this.getName() + "] -> Downstream [" + targetServer.getServerName() + "] has connected");
+            this.getLogger().info("[" + downstream.getAddress() + "|" + this.getName() + "] -> Downstream [" + targetServer.getServerName() + "] has connected");
         }));
     }
 
