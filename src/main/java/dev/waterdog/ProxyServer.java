@@ -20,7 +20,9 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.nukkitx.protocol.bedrock.BedrockClient;
 import com.nukkitx.protocol.bedrock.BedrockServer;
 import dev.waterdog.command.*;
+import dev.waterdog.network.serverinfo.BedrockServerInfo;
 import dev.waterdog.packs.PackManager;
+import dev.waterdog.utils.config.ServerInfoMap;
 import dev.waterdog.utils.types.*;
 import lombok.SneakyThrows;
 import net.cubespace.Yamler.Config.InvalidConfigurationException;
@@ -30,7 +32,7 @@ import dev.waterdog.event.EventManager;
 import dev.waterdog.event.defaults.DispatchCommandEvent;
 import dev.waterdog.logger.MainLogger;
 import dev.waterdog.network.ProxyListener;
-import dev.waterdog.network.ServerInfo;
+import dev.waterdog.network.serverinfo.ServerInfo;
 import dev.waterdog.network.protocol.ProtocolConstants;
 import dev.waterdog.network.protocol.ProtocolVersion;
 import dev.waterdog.player.PlayerManager;
@@ -68,8 +70,9 @@ public class ProxyServer {
     private final PackManager packManager;
 
     private BedrockServer bedrockServer;
-    private final ServerList serverInfoMap;
     private QueryHandler queryHandler;
+
+    private final ServerInfoMap serverInfoMap = new ServerInfoMap();
 
     private CommandMap commandMap;
     private final ConsoleCommandSender commandSender;
@@ -117,8 +120,8 @@ public class ProxyServer {
         // Default Handlers
         this.reconnectHandler = new VanillaReconnectHandler();
         this.joinHandler = new VanillaJoinHandler(this);
-        this.serverInfoMap = this.configurationManager.getProxyConfig().getServerInfoMap();
         this.pluginManager = new PluginManager(this);
+        this.configurationManager.loadServerInfos(this.serverInfoMap);
         this.scheduler = new WaterdogScheduler(this);
         this.playerManager = new PlayerManager(this);
         this.eventManager = new EventManager(this);
@@ -325,7 +328,6 @@ public class ProxyServer {
 
     /**
      * Get ServerInfo by address and port
-     *
      * @return ServerInfo instance of matched server
      */
     public ServerInfo getServerInfo(String address, int port) {
@@ -336,6 +338,27 @@ public class ProxyServer {
             }
         }
         return null;
+    }
+
+    /**
+     * Allows to register custom ServerInfo class which can be used to serialize ServerInfo from config.
+     * @param typeName name which is used to identify ServerInfo type from config.
+     * @param clazz class which will be constructed.
+     */
+    public void addServerInfoType(String typeName, Class<? extends ServerInfo> clazz) {
+        this.serverInfoMap.addServerInfoType(typeName, clazz);
+    }
+
+    public Class<? extends ServerInfo> getServerInfoType(String typeName) {
+        return this.serverInfoMap.getServerInfoType(typeName);
+    }
+
+    /**
+     * Remove ServerInfo type from ServerInfoMap
+     * @param typeName name which is used to identify ServerInfo type.
+     */
+    public void removeServerInfoType(String typeName) {
+        this.serverInfoMap.removeServerInfoType(typeName);
     }
 
     /**

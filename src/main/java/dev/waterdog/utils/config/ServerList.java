@@ -15,8 +15,6 @@
 
 package dev.waterdog.utils.config;
 
-import dev.waterdog.network.ServerInfo;
-
 import java.net.InetSocketAddress;
 import java.util.Collection;
 import java.util.TreeMap;
@@ -27,32 +25,33 @@ import java.util.TreeMap;
  */
 public class ServerList {
 
-    private final TreeMap<String, ServerInfo> serverList = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
+    private final TreeMap<String, ServerEntry> serverList = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
 
-    public ServerInfo get(String name) {
+    public ServerEntry get(String name) {
         return this.serverList.get(name);
     }
 
-    public ServerInfo putIfAbsent(String name, ServerInfo info) {
+    public ServerEntry putIfAbsent(String name, ServerEntry info) {
         return this.serverList.putIfAbsent(name, info);
     }
 
-    public ServerInfo remove(String name) {
+    public ServerEntry remove(String name) {
         return this.serverList.remove(name);
     }
 
-    public ServerInfo put(String name, ServerInfo info) {
+    public ServerEntry put(String name, ServerEntry info) {
         return this.serverList.put(name, info);
     }
 
-    public Collection<ServerInfo> values() {
+    public Collection<ServerEntry> values() {
         return this.serverList.values();
     }
 
     public ServerList initEmpty() {
-        this.putIfAbsent("lobby1", new ServerInfo("lobby1",
+        this.putIfAbsent("lobby1", new ServerEntry("lobby1",
                 new InetSocketAddress("127.0.0.1", 19133),
-                new InetSocketAddress("play.myserver.com", 19133)));
+                new InetSocketAddress("play.myserver.com", 19133),
+                null));
         return this;
     }
 }

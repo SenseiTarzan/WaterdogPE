@@ -16,7 +16,7 @@
 package dev.waterdog.event.defaults;
 
 import dev.waterdog.event.AsyncEvent;
-import dev.waterdog.network.ServerInfo;
+import dev.waterdog.network.serverinfo.ServerInfo;
 import dev.waterdog.player.ProxiedPlayer;
 
 @AsyncEvent

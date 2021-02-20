@@ -17,7 +17,7 @@ package dev.waterdog.network.downstream;
 
 import com.nukkitx.protocol.bedrock.packet.*;
 import dev.waterdog.command.Command;
-import dev.waterdog.network.ServerInfo;
+import dev.waterdog.network.serverinfo.ServerInfo;
 import dev.waterdog.utils.exceptions.CancelSignalException;
 import dev.waterdog.utils.types.TranslationContainer;
 import dev.waterdog.event.defaults.PostTransferCompleteEvent;

@@ -13,10 +13,12 @@
  * limitations under the License.
  */
 
-package dev.waterdog.network;
+package dev.waterdog.network.serverinfo;
 
 import com.nukkitx.network.raknet.RakNetPong;
 import dev.waterdog.ProxyServer;
+import dev.waterdog.network.session.DownstreamConnection;
+import dev.waterdog.network.protocol.ProtocolVersion;
 import lombok.ToString;
 import dev.waterdog.network.protocol.ProtocolConstants;
 import dev.waterdog.player.ProxiedPlayer;
@@ -34,7 +36,7 @@ import java.util.concurrent.TimeUnit;
  * Also holds a list of all ProxiedPlayers connected.
  */
 @ToString(exclude = {"players"})
-public class ServerInfo {
+public abstract class ServerInfo {
 
     private final String serverName;
     private final InetSocketAddress address;
@@ -53,13 +55,14 @@ public class ServerInfo {
 
     /**
      * CompletableFuture may throw exception if ping fails. Therefore it is recommended to handle using whenComplete().
-     *
      * @return CompletableFuture with RakNetPong.
      */
     public CompletableFuture<RakNetPong> ping(long timeout, TimeUnit unit) {
         return ProxyServer.getInstance().bindClient(ProtocolConstants.getLatestProtocol()).thenCompose(client ->
                 client.getRakNet().ping(this.address, timeout, unit).whenComplete((pong, error) -> client.close()));
     }
+
+    public abstract CompletableFuture<DownstreamConnection> bindNewConnection(ProtocolVersion protocol);
 
     public void addPlayer(ProxiedPlayer player) {
         if (player != null) {

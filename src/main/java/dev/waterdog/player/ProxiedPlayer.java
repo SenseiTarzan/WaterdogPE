@@ -23,12 +23,8 @@ import dev.waterdog.ProxyServer;
 import dev.waterdog.command.CommandSender;
 import dev.waterdog.event.defaults.*;
 import dev.waterdog.logger.MainLogger;
-import dev.waterdog.network.ServerInfo;
-import dev.waterdog.network.bridge.DownstreamBridge;
-import dev.waterdog.network.bridge.TransferBatchBridge;
-import dev.waterdog.network.bridge.UpstreamBridge;
-import dev.waterdog.network.downstream.InitialHandler;
-import dev.waterdog.network.downstream.SwitchDownstreamHandler;
+import dev.waterdog.network.session.DownstreamConnection;
+import dev.waterdog.network.serverinfo.ServerInfo;
 import dev.waterdog.network.protocol.ProtocolVersion;
 import dev.waterdog.network.rewrite.RewriteMaps;
 import dev.waterdog.network.rewrite.types.RewriteData;
@@ -46,9 +42,9 @@ import it.unimi.dsi.fastutil.objects.*;
 import java.net.InetSocketAddress;
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -163,9 +159,14 @@ public class ProxiedPlayer implements CommandSender {
         });
     }
 
+    public void onInitialServerConnected(ServerConnection server) {
+        this.serverConnection = server;
+        server.getInfo().addPlayer(this);
+        this.hasUpstreamBridge = true;
+    }
+
     /**
      * Transfers the player to another downstream server
-     *
      * @param serverInfo ServerInfo of the target downstream server, can be received using ProxyServer#getServer
      */
     public void connect(ServerInfo serverInfo) {
@@ -192,38 +193,20 @@ public class ProxiedPlayer implements CommandSender {
             this.setPendingConnection(targetServer);
         }
 
-        CompletableFuture<BedrockClient> future = this.proxy.bindClient(this.getProtocol());
-        future.thenAccept(client -> client.connect(targetServer.getAddress()).whenComplete((downstream, error) -> {
+        CompletableFuture<DownstreamConnection> future = targetServer.bindNewConnection(this.getProtocol());
+        future.thenAccept(conn -> conn.connect(targetServer.getAddress(), 10, TimeUnit.SECONDS).whenComplete((downstream, error) -> {
             if (this.disconnected.get()) {
-                client.close();
+                conn.close();
                 this.getLogger().debug("Discarding downstream connection: Player " + this.getName() +" disconnected!");
                 return;
             }
 
             if (error != null) {
-                this.connectFailure(client, targetServer, error);
-                return;
-            }
-
-            if (this.serverConnection == null) {
-                this.serverConnection = new ServerConnection(client, downstream, targetServer);
-                targetServer.addPlayer(this);
-
-                downstream.setPacketHandler(new InitialHandler(this));
-                downstream.setBatchHandler(new DownstreamBridge(this, this.upstream));
-                this.upstream.setBatchHandler(new UpstreamBridge(this, downstream));
-                this.hasUpstreamBridge = true;
+                this.connectFailure(conn, targetServer, error);
             } else {
-                downstream.setPacketHandler(new SwitchDownstreamHandler(this, targetServer, client));
-                downstream.setBatchHandler(new TransferBatchBridge(this, this.upstream));
+                conn.onDownstreamConnected(this);
+                this.getLogger().info("[" + this.getAddress() + "|" + this.getName() + "] -> Downstream [" + targetServer.getServerName() + "] has connected");
             }
-
-            downstream.setPacketCodec(this.getProtocol().getCodec());
-            downstream.sendPacketImmediately(this.loginData.getLoginPacket());
-            downstream.setLogging(true);
-
-            SessionInjections.injectNewDownstream(downstream, this, targetServer, client);
-            this.getLogger().info("[" + this.getAddress() + "|" + this.getName() + "] -> Downstream [" + targetServer.getServerName() + "] has connected");
         })).whenComplete((ignore, error) -> {
             if (error != null) {
                 this.connectFailure(null, targetServer, error);
@@ -231,11 +214,11 @@ public class ProxiedPlayer implements CommandSender {
         });
     }
 
-    private void connectFailure(BedrockClient client, ServerInfo targetServer, Throwable error) {
+    private void connectFailure(DownstreamConnection conn, ServerInfo targetServer, Throwable error) {
         this.getLogger().debug("[" + this.getAddress() + "|" + this.getName() + "] Unable to connect to downstream " + targetServer.getServerName(), error);
         this.setPendingConnection(null);
-        if (client != null) {
-            client.close();
+        if (conn != null) {
+            conn.close();
         }
 
         String exceptionMessage = error.getLocalizedMessage();

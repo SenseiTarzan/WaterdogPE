@@ -17,15 +17,15 @@ package dev.waterdog.network.downstream;
 
 import com.nimbusds.jwt.SignedJWT;
 import com.nukkitx.math.vector.Vector3f;
-import com.nukkitx.protocol.bedrock.BedrockClient;
-import com.nukkitx.protocol.bedrock.BedrockClientSession;
 import com.nukkitx.protocol.bedrock.packet.*;
 import com.nukkitx.protocol.bedrock.util.EncryptionUtils;
 import dev.waterdog.event.defaults.TransferCompleteEvent;
-import dev.waterdog.network.ServerInfo;
+import dev.waterdog.network.serverinfo.ServerInfo;
 import dev.waterdog.network.protocol.ProtocolVersion;
 import dev.waterdog.network.rewrite.types.BlockPalette;
 import dev.waterdog.network.rewrite.types.RewriteData;
+import dev.waterdog.network.session.DownstreamConnection;
+import dev.waterdog.network.session.DownstreamSession;
 import dev.waterdog.network.session.ServerConnection;
 import dev.waterdog.network.session.SessionInjections;
 import dev.waterdog.player.PlayerRewriteUtils;
@@ -44,17 +44,17 @@ import java.util.UUID;
 
 public class SwitchDownstreamHandler extends AbstractDownstreamHandler {
 
-    private final BedrockClient client;
+    private final DownstreamConnection connection;
     private final ServerInfo serverInfo;
 
-    public SwitchDownstreamHandler(ProxiedPlayer player, ServerInfo serverInfo, BedrockClient client) {
+    public SwitchDownstreamHandler(ProxiedPlayer player, ServerInfo serverInfo, DownstreamConnection connection) {
         super(player);
         this.serverInfo = serverInfo;
-        this.client = client;
+        this.connection = connection;
     }
 
-    public BedrockClientSession getDownstream() {
-        return this.client.getSession();
+    public DownstreamSession getDownstream() {
+        return this.connection.getSession();
     }
 
     @Override
@@ -171,7 +171,7 @@ public class SwitchDownstreamHandler extends AbstractDownstreamHandler {
         this.serverInfo.addPlayer(this.player);
         this.player.setPendingConnection(null);
 
-        ServerConnection server = new ServerConnection(this.client, this.getDownstream(), this.serverInfo);
+        ServerConnection server = new ServerConnection(this.connection, this.getDownstream(), this.serverInfo);
         SessionInjections.injectDownstreamHandlers(server, this.player);
         this.player.setServer(server);
         this.player.setAcceptPlayStatus(true);
@@ -184,7 +184,7 @@ public class SwitchDownstreamHandler extends AbstractDownstreamHandler {
     @Override
     public boolean handle(DisconnectPacket packet) {
         this.player.sendMessage(new TranslationContainer("waterdog.downstream.transfer.failed", this.serverInfo.getServerName(), packet.getKickMessage()));
-        this.client.close();
+        this.connection.close();
         this.player.setPendingConnection(null);
         return false;
     }

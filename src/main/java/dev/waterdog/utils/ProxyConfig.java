@@ -20,7 +20,7 @@ import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import net.cubespace.Yamler.Config.YamlConfig;
 import net.cubespace.Yamler.Config.*;
 import dev.waterdog.utils.config.InetSocketAddressConverter;
-import dev.waterdog.utils.config.ServerInfoConverter;
+import dev.waterdog.utils.config.ServerEntryConverter;
 import dev.waterdog.utils.config.ServerList;
 import dev.waterdog.utils.config.ServerListConverter;
 
@@ -36,7 +36,7 @@ public class ProxyConfig extends YamlConfig {
             "address field is formatted using ip:port",
             "publicAddress is optional and can be set to the ip players can directly connect through"
     })
-    private ServerList serverInfoMap = new ServerList().initEmpty();
+    private ServerList serverList = new ServerList().initEmpty();
 
     @Path("listener.motd")
     @Comment("The Motd which will be displayed in the server tab of a player and returned during ping")
@@ -146,7 +146,7 @@ public class ProxyConfig extends YamlConfig {
         this.CONFIG_FILE = file;
         try {
             this.addConverter(InetSocketAddressConverter.class);
-            this.addConverter(ServerInfoConverter.class);
+            this.addConverter(ServerEntryConverter.class);
             this.addConverter(ServerListConverter.class);
         } catch (InvalidConverterException e) {
             ProxyServer.getInstance().getLogger().error("Error while initiating config converters", e);
@@ -285,8 +285,8 @@ public class ProxyConfig extends YamlConfig {
         return this.packCacheSize;
     }
 
-    public ServerList getServerInfoMap() {
-        return this.serverInfoMap;
+    public ServerList getServerList() {
+        return this.serverList;
     }
 
     public int getDefaultIdleThreads() {

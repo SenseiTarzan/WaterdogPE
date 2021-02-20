@@ -21,7 +21,7 @@ import com.nukkitx.protocol.bedrock.data.command.CommandParamType;
 import dev.waterdog.command.Command;
 import dev.waterdog.command.CommandSender;
 import dev.waterdog.command.CommandSettings;
-import dev.waterdog.network.ServerInfo;
+import dev.waterdog.network.serverinfo.ServerInfo;
 import dev.waterdog.utils.types.TextContainer;
 import dev.waterdog.player.ProxiedPlayer;
 

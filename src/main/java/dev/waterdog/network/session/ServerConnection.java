@@ -15,10 +15,8 @@
 
 package dev.waterdog.network.session;
 
-import com.nukkitx.protocol.bedrock.BedrockClient;
-import com.nukkitx.protocol.bedrock.BedrockClientSession;
 import com.nukkitx.protocol.bedrock.BedrockPacket;
-import dev.waterdog.network.ServerInfo;
+import dev.waterdog.network.serverinfo.ServerInfo;
 
 import java.net.InetSocketAddress;
 
@@ -29,11 +27,11 @@ public class ServerConnection {
 
     private final ServerInfo serverInfo;
 
-    private final BedrockClient client;
-    private final BedrockClientSession downstream;
+    private final DownstreamConnection connection;
+    private final DownstreamSession downstream;
 
-    public ServerConnection(BedrockClient client, BedrockClientSession session, ServerInfo serverInfo) {
-        this.client = client;
+    public ServerConnection(DownstreamConnection connection, DownstreamSession session, ServerInfo serverInfo) {
+        this.connection = connection;
         this.downstream = session;
         this.serverInfo = serverInfo;
     }
@@ -53,15 +51,14 @@ public class ServerConnection {
      * @param force if block thread till everything is closed.
      */
     public void disconnect(boolean force) {
-        // TODO: client.close(force) once it appear in protocol lib
-        this.client.close();
+        this.connection.close(force);
     }
 
     public ServerInfo getInfo() {
         return this.serverInfo;
     }
 
-    public BedrockClientSession getDownstream() {
+    public DownstreamSession getDownstream() {
         return this.downstream;
     }
 

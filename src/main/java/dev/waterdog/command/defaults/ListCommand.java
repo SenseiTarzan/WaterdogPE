@@ -18,7 +18,7 @@ package dev.waterdog.command.defaults;
 import dev.waterdog.command.Command;
 import dev.waterdog.command.CommandSender;
 import dev.waterdog.command.CommandSettings;
-import dev.waterdog.network.ServerInfo;
+import dev.waterdog.network.serverinfo.ServerInfo;
 import dev.waterdog.utils.types.TranslationContainer;
 import dev.waterdog.player.ProxiedPlayer;
 
